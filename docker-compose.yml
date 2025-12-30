@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: group-photo-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${DB_USER:-botuser}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-botpass}
+      - POSTGRES_DB=${DB_NAME:-botdb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-botuser} -d ${DB_NAME:-botdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  bot:
+    build:
+      context: .
+      dockerfile: docker/bot/Dockerfile
+    container_name: group-photo-bot
+    restart: unless-stopped
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - MIN_FACES=${MIN_FACES:-4}
+      - MAX_FACES=${MAX_FACES:-6}
+      - VOTING_TEXT=${VOTING_TEXT:-кто тут у нас самый улыбчивый}
+      - VOTING_DURATION=${VOTING_DURATION:-5m}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-botuser}
+      - DB_PASSWORD=${DB_PASSWORD:-botpass}
+      - DB_NAME=${DB_NAME:-botdb}
+      - DB_SSLMODE=disable
+    networks:
+      - app-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "bot"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  admin:
+    build:
+      context: .
+      dockerfile: docker/admin/Dockerfile
+    container_name: group-photo-admin
+    restart: unless-stopped
+    ports:
+      - "${ADMIN_PORT:-8080}:8080"
+    environment:
+      - ADMIN_PORT=8080
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${DB_USER:-botuser}
+      - DB_PASSWORD=${DB_PASSWORD:-botpass}
+      - DB_NAME=${DB_NAME:-botdb}
+      - DB_SSLMODE=disable
+    networks:
+      - app-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/auth/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
+

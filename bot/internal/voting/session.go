@@ -7,16 +7,16 @@ import (
 
 // Session представляет сессию голосования.
 type Session struct {
-	ID           string
-	ChatID       int64
-	MessageID    int
-	PhotoFileID  string
-	FacesCount   int
-	Votes        map[int64]int // userID -> faceIndex (0-based)
-	StartTime    time.Time
-	EndTime      time.Time
-	IsActive     bool
-	mu           sync.RWMutex
+	ID          string
+	ChatID      int64
+	MessageID   int
+	PhotoFileID string
+	FacesCount  int
+	Votes       map[int64]int // userID -> faceIndex (0-based)
+	StartTime   time.Time
+	EndTime     time.Time
+	IsActive    bool
+	mu          sync.RWMutex
 }
 
 // NewSession создает новую сессию голосования.
@@ -115,3 +115,21 @@ func (s *Session) Deactivate() {
 	s.IsActive = false
 }
 
+// GetVotes возвращает копию карты голосов (для сериализации в БД).
+func (s *Session) GetVotes() map[int64]int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	votes := make(map[int64]int, len(s.Votes))
+	for k, v := range s.Votes {
+		votes[k] = v
+	}
+	return votes
+}
+
+// SetVotes устанавливает голоса (для загрузки из БД).
+func (s *Session) SetVotes(votes map[int64]int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.Votes = votes
+}

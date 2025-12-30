@@ -6,6 +6,16 @@ import (
 	"time"
 )
 
+// StoreInterface определяет интерфейс для хранилища сессий голосований.
+type StoreInterface interface {
+	CreateSession(chatID int64, messageID int, photoFileID string, facesCount int, duration time.Duration) (*Session, error)
+	GetSession(sessionID string) (*Session, bool)
+	GetSessionByMessage(chatID int64, messageID int) (*Session, bool)
+	CanCreateSession(chatID int64, minInterval time.Duration) bool
+	DeleteSession(sessionID string)
+	CleanupExpired(olderThan time.Duration)
+}
+
 // Store представляет in-memory хранилище сессий голосований.
 type Store struct {
 	sessions        map[string]*Session // sessionID -> session
@@ -13,6 +23,9 @@ type Store struct {
 	chatLastActive  map[int64]time.Time // chatID -> last active time (для rate limiting)
 	mu              sync.RWMutex
 }
+
+// Убеждаемся, что Store реализует StoreInterface
+var _ StoreInterface = (*Store)(nil)
 
 // NewStore создает новое хранилище.
 func NewStore() *Store {
@@ -118,4 +131,3 @@ func (s *Store) messageKey(chatID int64, messageID int) int64 {
 	// Для простоты используем хеш-функцию
 	return chatID*1000000 + int64(messageID)
 }
-

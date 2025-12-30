@@ -11,14 +11,14 @@ type ResultCallback func(session *Session) error
 
 // Service управляет жизненным циклом голосований.
 type Service struct {
-	store           *Store
+	store           StoreInterface
 	resultCallback  ResultCallback
 	cleanupInterval time.Duration
 	stopCleanup     chan struct{}
 }
 
 // NewService создает новый сервис голосований.
-func NewService(store *Store, resultCallback ResultCallback) *Service {
+func NewService(store StoreInterface, resultCallback ResultCallback) *Service {
 	return &Service{
 		store:           store,
 		resultCallback:  resultCallback,
@@ -54,8 +54,9 @@ func (s *Service) CreateVoting(chatID int64, messageID int, photoFileID string, 
 	return session, nil
 }
 
-// Store возвращает хранилище сессий.
-func (s *Service) Store() *Store {
+// Store возвращает хранилище сессий (для обратной совместимости).
+// Внимание: возвращает интерфейс, может быть nil для репозитория.
+func (s *Service) Store() StoreInterface {
 	return s.store
 }
 
@@ -66,6 +67,18 @@ func (s *Service) SetResultCallback(callback ResultCallback) {
 
 // Vote регистрирует голос в сессии.
 func (s *Service) Vote(sessionID string, userID int64, faceIndex int) (bool, error) {
+	// Проверяем, является ли store репозиторием с методом Vote
+	if repo, ok := s.store.(interface {
+		Vote(sessionID string, userID int64, faceIndex int) error
+	}); ok {
+		// Используем метод репозитория
+		if err := repo.Vote(sessionID, userID, faceIndex); err != nil {
+			return false, err
+		}
+		return true, nil
+	}
+
+	// Fallback на старую логику для in-memory store
 	session, exists := s.store.GetSession(sessionID)
 	if !exists {
 		return false, fmt.Errorf("session not found: %s", sessionID)
@@ -133,4 +146,3 @@ func (s *Service) checkExpiredSessions() {
 	// В реальной реализации здесь нужен метод для получения всех активных сессий
 	// Для упрощения MVP оставляем основную логику в таймерах
 }
-

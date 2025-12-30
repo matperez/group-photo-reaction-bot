@@ -6,6 +6,7 @@
 *.dylib
 bot/main
 bot/bot
+bin/
 
 # Test binary
 *.test

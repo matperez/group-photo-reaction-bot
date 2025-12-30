@@ -1,16 +1,14 @@
-module github.com/matperez/group-photo-reaction-bot/bot
+module github.com/matperez/group-photo-reaction-bot/admin
 
 go 1.25.5
 
-replace github.com/matperez/group-photo-reaction-bot/migrations => ../migrations
+replace github.com/matperez/group-photo-reaction-bot/bot => ../bot
 
 require (
-	github.com/esimov/pigo v1.4.6
-	github.com/joho/godotenv v1.5.1
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/lib/pq v1.10.9
 	github.com/pressly/goose/v3 v3.26.0
-	golang.org/x/image v0.34.0
-	gopkg.in/telebot.v3 v3.3.8
+	golang.org/x/crypto v0.46.0
 )
 
 require (
