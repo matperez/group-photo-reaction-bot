@@ -44,8 +44,8 @@ tmp/
 temp/
 *.tmp
 
-# Cascade files (large binary files)
-bot/cascade/
+# Cascade files (large binary files) - исключаем только внешние каскадные файлы
+# Встроенный каскадный файл в internal/face/cascade/ должен быть в репозитории
 *.cascade
 
 # Build artifacts

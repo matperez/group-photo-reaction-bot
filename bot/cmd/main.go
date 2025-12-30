@@ -21,13 +21,8 @@ func main() {
 	}
 
 	// Инициализируем детектор лиц
-	// Для MVP используем путь к каскадному классификатору из переменной окружения
-	cascadePath := os.Getenv("CASCADE_PATH")
-	if cascadePath == "" {
-		cascadePath = "cascade/facefinder" // Путь по умолчанию
-	}
-
-	detector, err := face.NewLocalDetector(cascadePath)
+	// Каскадный классификатор встроен в бинарник, внешние файлы не требуются
+	detector, err := face.NewLocalDetector()
 	if err != nil {
 		log.Fatalf("Failed to create face detector: %v", err)
 	}

@@ -53,7 +53,8 @@ Telegram-бот для автоматического обнаружения г�
 
 - Go 1.25.5 или выше
 - Telegram Bot Token (получить у [@BotFather](https://t.me/BotFather))
-- Файл каскадного классификатора для pigo (facefinder)
+
+**Примечание:** Каскадный классификатор для детекции лиц встроен в бинарник, внешние файлы не требуются.
 
 ### Установка
 
@@ -69,25 +70,16 @@ cd bot
 make deps
 ```
 
-3. Скачайте каскадный классификатор для pigo:
-```bash
-# Создайте каталог для каскадного классификатора
-mkdir -p cascade
-
-# Скачайте facefinder из репозитория pigo
-# https://github.com/esimov/pigo/tree/master/cascade
-# И поместите в каталог cascade/
-```
-
-4. Создайте файл `.env` в каталоге `bot/`:
+3. Создайте файл `.env` в каталоге `bot/`:
 ```env
 BOT_TOKEN=your_bot_token_here
-CASCADE_PATH=cascade/facefinder
 MIN_FACES=4
 MAX_FACES=6
 VOTING_TEXT=кто тут у нас самый улыбчивый
 VOTING_DURATION=5m
 ```
+
+**Примечание:** Каскадный классификатор встроен в бинарник через `embed`, параметр `CASCADE_PATH` больше не требуется.
 
 5. Запустите бота:
 ```bash

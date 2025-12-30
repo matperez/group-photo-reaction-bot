@@ -3,36 +3,39 @@ package face
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"fmt"
 	"image"
-	"os"
 
 	pigo "github.com/esimov/pigo/core"
 )
 
+//go:embed cascade/facefinder
+var embeddedCascade []byte
+
 // LocalDetector реализует детекцию лиц с использованием локальной модели pigo.
+// Каскадный классификатор встроен в бинарник через embed.
 type LocalDetector struct {
 	classifier *pigo.Pigo
 	cascade    []byte
 }
 
 // NewLocalDetector создает новый экземпляр локального детектора.
-// cascadePath - путь к файлу каскадного классификатора.
-func NewLocalDetector(cascadePath string) (*LocalDetector, error) {
-	cascade, err := os.ReadFile(cascadePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read cascade file: %w", err)
+// Использует встроенный каскадный классификатор, не требует внешних файлов.
+func NewLocalDetector() (*LocalDetector, error) {
+	if len(embeddedCascade) == 0 {
+		return nil, fmt.Errorf("embedded cascade file is empty")
 	}
 
 	p := pigo.NewPigo()
-	classifier, err := p.Unpack(cascade)
+	classifier, err := p.Unpack(embeddedCascade)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unpack cascade: %w", err)
 	}
 
 	return &LocalDetector{
 		classifier: classifier,
-		cascade:    cascade,
+		cascade:    embeddedCascade,
 	}, nil
 }
 
