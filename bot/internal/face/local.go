@@ -100,4 +100,3 @@ func (d *LocalDetector) DetectFaces(ctx context.Context, imageData []byte) ([]Fa
 
 	return faces, nil
 }
-
